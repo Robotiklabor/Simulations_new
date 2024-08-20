@@ -2,6 +2,8 @@ import pyglet
 import random
 import cv2
 from kivy.config import Config
+from pyglet.window import key
+
 
 
 class ArUcoSimulation(pyglet.window.Window):
@@ -11,6 +13,8 @@ class ArUcoSimulation(pyglet.window.Window):
         self.speed_x = speed_x
         self.speed_y = speed_y
         self.marker_size = marker_size
+        self.paused = False  # Add a paused state
+
 
 
         # Generate the ArUco marker image
@@ -47,53 +51,62 @@ class ArUcoSimulation(pyglet.window.Window):
 
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
+    def on_key_press(self, symbol, modifiers):
+        # Space bar key code is key.SPACE
+        if symbol == key.SPACE:
+            self.paused = not self.paused  # Toggle the paused state
+            # ESC key to exit
+        elif symbol == key.ESCAPE:
+            pyglet.app.exit()  # Exit the application
+
     def update(self, dt):
         if self.completed:
             pyglet.app.exit()
+        if not self.paused:  # Only update if not paused
 
-        padded_left = self.padding_left
-        padded_right = self.width - self.padding_right - self.marker_sprite.width
-        padded_top = self.padding_top
-        padded_bottom = self.height - self.padding_bottom - self.marker_sprite.height
+            padded_left = self.padding_left
+            padded_right = self.width - self.padding_right - self.marker_sprite.width
+            padded_top = self.padding_top
+            padded_bottom = self.height - self.padding_bottom - self.marker_sprite.height
 
-        if self.direction_x:
-            self.current_x += self.speed_x * self.direction_x
-            self.vertical_movement += self.speed_y * self.direction_y
-            if self.current_x >= padded_right:
-                self.current_x = padded_right
-                self.direction_x = 0
-                self.direction_y = 1
-                self.vertical_movement = 0
-            elif self.current_x <= padded_left:
-                self.current_x = padded_left
-                self.direction_x = 0
-                self.direction_y = 1
-                self.vertical_movement = 0
+            if self.direction_x:
+                self.current_x += self.speed_x * self.direction_x
+                self.vertical_movement += self.speed_y * self.direction_y
+                if self.current_x >= padded_right:
+                    self.current_x = padded_right
+                    self.direction_x = 0
+                    self.direction_y = 1
+                    self.vertical_movement = 0
+                elif self.current_x <= padded_left:
+                    self.current_x = padded_left
+                    self.direction_x = 0
+                    self.direction_y = 1
+                    self.vertical_movement = 0
 
-        elif self.direction_y:
-            self.current_y += self.speed_y * self.direction_y
-            self.vertical_movement += self.speed_y * self.direction_y
-            if self.vertical_movement >= self.grid_size:
-                self.current_y = min(max(self.current_y, padded_top), padded_bottom)
-                self.direction_y = 0
-                if self.direction_x == 0:
-                    if self.current_x == padded_right:
-                        self.direction_x = -1
-                    elif self.current_x == padded_left:
-                        self.direction_x = 1
-                self.vertical_movement = 0
+            elif self.direction_y:
+                self.current_y += self.speed_y * self.direction_y
+                self.vertical_movement += self.speed_y * self.direction_y
+                if self.vertical_movement >= self.grid_size:
+                    self.current_y = min(max(self.current_y, padded_top), padded_bottom)
+                    self.direction_y = 0
+                    if self.direction_x == 0:
+                        if self.current_x == padded_right:
+                            self.direction_x = -1
+                        elif self.current_x == padded_left:
+                            self.direction_x = 1
+                    self.vertical_movement = 0
 
-        self.current_x = max(padded_left, min(self.current_x, padded_right))
-        self.current_y = max(padded_top, min(self.current_y, padded_bottom))
+            self.current_x = max(padded_left, min(self.current_x, padded_right))
+            self.current_y = max(padded_top, min(self.current_y, padded_bottom))
 
-        if self.current_x >= padded_right and self.current_y >= padded_bottom:
-            self.completed = True
-        elif self.current_x <= padded_left and self.current_y <= padded_top:
-            self.completed = True
+            if self.current_x >= padded_right and self.current_y >= padded_bottom:
+                self.completed = True
+            elif self.current_x <= padded_left and self.current_y <= padded_top:
+                self.completed = True
 
-        # Update the marker position
-        self.marker_sprite.x = self.current_x
-        self.marker_sprite.y = self.current_y
+            # Update the marker position
+            self.marker_sprite.x = self.current_x
+            self.marker_sprite.y = self.current_y
 
     def on_draw(self):
         # Clear the screen with a white background
