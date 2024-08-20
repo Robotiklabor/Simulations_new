@@ -127,3 +127,4 @@ if __name__ == '__main__':
     Config.set('graphics', 'multisamples', '4')  # Anti-aliasing for smoother graphics
     Config.set('graphics', 'vsync', '1')  # Enable V-Sync for smoother animation
     pyglet.app.run()
+#
