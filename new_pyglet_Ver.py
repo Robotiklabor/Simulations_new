@@ -2,6 +2,9 @@ import pyglet
 import random
 import cv2
 from kivy.config import Config
+from pyglet.window import key
+
+
 
 
 class ArUcoVerticalSimulation(pyglet.window.Window):
@@ -11,6 +14,8 @@ class ArUcoVerticalSimulation(pyglet.window.Window):
         self.speed_x = speed_x
         self.speed_y = speed_y
         self.marker_size = marker_size
+        self.paused = False  # Add a paused state
+
 
         # Generate the ArUco marker image
         aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
@@ -46,54 +51,63 @@ class ArUcoVerticalSimulation(pyglet.window.Window):
 
         pyglet.clock.schedule_interval(self.update, 1 / 60.0)
 
+    def on_key_press(self, symbol, modifiers):
+        # Space bar key code is key.SPACE
+        if symbol == key.SPACE:
+            self.paused = not self.paused  # Toggle the paused state
+            # ESC key to exit
+        elif symbol == key.ESCAPE:
+            pyglet.app.exit()  # Exit the application
     def update(self, dt):
         if self.completed:
             pyglet.app.exit()
 
-        padded_left = self.padding_left
-        padded_right = self.width - self.padding_right - self.marker_sprite.width
-        padded_top = self.padding_top
-        padded_bottom = self.height - self.padding_bottom - self.marker_sprite.height
+        if not self.paused:  # Only update if not paused
 
-        # Vertical movement logic
-        if self.direction_y:
-            self.current_y += self.speed_y * self.direction_y
-            if self.current_y >= padded_bottom:
-                self.current_y = padded_bottom
-                self.direction_y = 0
-                self.direction_x = 1
-                self.horizontal_movement = 0
-            elif self.current_y <= padded_top:
-                self.current_y = padded_top
-                self.direction_y = 0
-                self.direction_x = 1
-                self.horizontal_movement = 0
+            padded_left = self.padding_left
+            padded_right = self.width - self.padding_right - self.marker_sprite.width
+            padded_top = self.padding_top
+            padded_bottom = self.height - self.padding_bottom - self.marker_sprite.height
 
-        # Horizontal movement logic
-        elif self.direction_x:
-            self.current_x += self.speed_x * self.direction_x
-            self.horizontal_movement += self.speed_x * self.direction_x
-            if self.horizontal_movement >= self.grid_size:
-                self.current_x = min(max(self.current_x, padded_left), padded_right)
-                self.direction_x = 0
-                if self.direction_y == 0:
-                    if self.current_y == padded_bottom:
-                        self.direction_y = -1  # Move up
-                    elif self.current_y == padded_top:
-                        self.direction_y = 1  # Move down
-                self.horizontal_movement = 0
+            # Vertical movement logic
+            if self.direction_y:
+                self.current_y += self.speed_y * self.direction_y
+                if self.current_y >= padded_bottom:
+                    self.current_y = padded_bottom
+                    self.direction_y = 0
+                    self.direction_x = 1
+                    self.horizontal_movement = 0
+                elif self.current_y <= padded_top:
+                    self.current_y = padded_top
+                    self.direction_y = 0
+                    self.direction_x = 1
+                    self.horizontal_movement = 0
 
-        self.current_x = max(padded_left, min(self.current_x, padded_right))
-        self.current_y = max(padded_top, min(self.current_y, padded_bottom))
+            # Horizontal movement logic
+            elif self.direction_x:
+                self.current_x += self.speed_x * self.direction_x
+                self.horizontal_movement += self.speed_x * self.direction_x
+                if self.horizontal_movement >= self.grid_size:
+                    self.current_x = min(max(self.current_x, padded_left), padded_right)
+                    self.direction_x = 0
+                    if self.direction_y == 0:
+                        if self.current_y == padded_bottom:
+                            self.direction_y = -1  # Move up
+                        elif self.current_y == padded_top:
+                            self.direction_y = 1  # Move down
+                    self.horizontal_movement = 0
 
-        if self.current_x >= padded_right and self.current_y >= padded_bottom:
-            self.completed = True
-        elif self.current_x <= padded_left and self.current_y <= padded_top:
-            self.completed = True
+            self.current_x = max(padded_left, min(self.current_x, padded_right))
+            self.current_y = max(padded_top, min(self.current_y, padded_bottom))
 
-        # Update the marker position
-        self.marker_sprite.x = self.current_x
-        self.marker_sprite.y = self.current_y
+            if self.current_x >= padded_right and self.current_y >= padded_bottom:
+                self.completed = True
+            elif self.current_x <= padded_left and self.current_y <= padded_top:
+                self.completed = True
+
+            # Update the marker position
+            self.marker_sprite.x = self.current_x
+            self.marker_sprite.y = self.current_y
 
     def on_draw(self):
         # Clear the screen with a white background
@@ -110,7 +124,7 @@ if __name__ == '__main__':
     sim = ArUcoVerticalSimulation()
     Config.set('graphics', 'width', '1920')
     Config.set('graphics', 'height', '1080')
-    Config.set('graphics', 'fullscreen', '0')  # Set to '1' for fullscreen
+    Config.set('graphics', 'fullscreen', '1')  # Set to '1' for fullscreen
     Config.set('graphics', 'multisamples', '4')  # Anti-aliasing for smoother graphics
     Config.set('graphics', 'vsync', '1')  # Enable V-Sync for smoother animation
     pyglet.app.run()
