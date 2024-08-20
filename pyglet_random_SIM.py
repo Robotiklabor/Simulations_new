@@ -10,11 +10,11 @@ from kivy.config import Config
 class ArUcoSimulation(Widget):
     def __init__(self, **kwargs):
         super(ArUcoSimulation, self).__init__(**kwargs)
-        self.width, self.height = 3440, 1440
-        self.marker_size = 350
-        self.speed_x = 2
-        self.speed_y = 2
-        self.padding = 60
+        self.width, self.height = 1920, 1080
+        self.marker_size = 200
+        self.speed_x = 1
+        self.speed_y = 1
+        self.padding = 40
         self.x = random.randint(0, self.width - self.marker_size)
         self.y = random.randint(0, self.height - self.marker_size)
 
@@ -38,7 +38,7 @@ class ArUcoSimulation(Widget):
             self.dot_size = 20
             self.dot = Ellipse(pos=self.calculate_dot_position(), size=(self.dot_size, self.dot_size))
 
-        Clock.schedule_interval(self.update, 1.0 / 30.0)
+        Clock.schedule_interval(self.update, 1.0 / 60)
 
     def calculate_dot_position(self):
         """ Calculate the position of the dot to ensure it is centered on the marker """
@@ -64,10 +64,10 @@ class ArUcoApp(App):
         return ArUcoSimulation()
 
 if __name__ == '__main__':
-    Config.set('graphics', 'width', '3440')
-    Config.set('graphics', 'height', '1440')
+    Config.set('graphics', 'width', '1920')
+    Config.set('graphics', 'height', '1080')
     Config.set('graphics', 'fullscreen', '0')  # Set to '1' for fullscreen
     Config.set('graphics', 'multisamples', '4')  # Anti-aliasing for smoother graphics
     Config.set('graphics', 'vsync', '1')  # Enable V-Sync for smoother animation
-    Config.set('graphics', 'borderless', '1')  # Remove window borders if in fullscreen
+    # Config.set('graphics', 'borderless', '1')  # Remove window borders if in fullscreen
     ArUcoApp().run()
